@@ -120,7 +120,7 @@ impl super::Loader for ArcLoader {
         lang: &LanguageIdentifier,
         text_id: &str,
         args: Option<&HashMap<Cow<'static, str>, FluentValue>>,
-    ) -> String {
+    ) -> Cow<'_, str> {
         for lang in negotiate_languages(&[lang], &self.bundles.keys().collect::<Vec<_>>(), None) {
             if let Ok(val) = self.lookup_single_language(lang, text_id, args) {
                 return val;
@@ -131,7 +131,7 @@ impl super::Loader for ArcLoader {
                 return val;
             }
         }
-        format!("Unknown localization key: {text_id:?}")
+        Cow::Owned(format!("Unknown localization key: {text_id:?}"))
     }
 
     // Traverse the fallback chain,
@@ -140,7 +140,7 @@ impl super::Loader for ArcLoader {
         lang: &LanguageIdentifier,
         text_id: &str,
         args: Option<&HashMap<Cow<'static, str>, FluentValue>>,
-    ) -> Option<String> {
+    ) -> Option<Cow<'_, str>> {
         for lang in negotiate_languages(&[lang], &self.bundles.keys().collect::<Vec<_>>(), None) {
             if let Ok(val) = self.lookup_single_language(lang, text_id, args) {
                 return Some(val);
@@ -179,7 +179,7 @@ impl ArcLoader {
         lang: &LanguageIdentifier,
         text_id: &str,
         args: Option<&HashMap<T, FluentValue>>,
-    ) -> Result<String, LookupError> {
+    ) -> Result<Cow<'_, str>, LookupError> {
         super::shared::lookup_single_language(&self.bundles, lang, text_id, args)
     }
 
@@ -190,7 +190,7 @@ impl ArcLoader {
         lang: &LanguageIdentifier,
         text_id: &str,
         args: Option<&HashMap<S, FluentValue>>,
-    ) -> Option<String> {
+    ) -> Option<Cow<'_, str>> {
         super::shared::lookup_no_default_fallback(
             &self.bundles,
             &self.fallbacks,

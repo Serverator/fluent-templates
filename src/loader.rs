@@ -30,7 +30,7 @@ pub use static_loader::StaticLoader;
 /// A loader capable of looking up Fluent keys given a language.
 pub trait Loader {
     /// Look up `text_id` for `lang` in Fluent.
-    fn lookup(&self, lang: &LanguageIdentifier, text_id: &str) -> String {
+    fn lookup(&self, lang: &LanguageIdentifier, text_id: &str) -> Cow<'_, str> {
         self.lookup_complete(lang, text_id, None)
     }
 
@@ -40,7 +40,7 @@ pub trait Loader {
         lang: &LanguageIdentifier,
         text_id: &str,
         args: &HashMap<Cow<'static, str>, FluentValue>,
-    ) -> String {
+    ) -> Cow<'_, str> {
         self.lookup_complete(lang, text_id, Some(args))
     }
 
@@ -50,10 +50,10 @@ pub trait Loader {
         lang: &LanguageIdentifier,
         text_id: &str,
         args: Option<&HashMap<Cow<'static, str>, FluentValue>>,
-    ) -> String;
+    ) -> Cow<'_, str>;
 
     /// Look up `text_id` for `lang` in Fluent.
-    fn try_lookup(&self, lang: &LanguageIdentifier, text_id: &str) -> Option<String> {
+    fn try_lookup(&self, lang: &LanguageIdentifier, text_id: &str) -> Option<Cow<'_, str>> {
         self.try_lookup_complete(lang, text_id, None)
     }
 
@@ -63,7 +63,7 @@ pub trait Loader {
         lang: &LanguageIdentifier,
         text_id: &str,
         args: &HashMap<Cow<'static, str>, FluentValue>,
-    ) -> Option<String> {
+    ) -> Option<Cow<'_, str>> {
         self.try_lookup_complete(lang, text_id, Some(args))
     }
 
@@ -73,7 +73,7 @@ pub trait Loader {
         lang: &LanguageIdentifier,
         text_id: &str,
         args: Option<&HashMap<Cow<'static, str>, FluentValue>>,
-    ) -> Option<String>;
+    ) -> Option<Cow<'_, str>>;
 
     /// Returns an Iterator over the locales that are present.
     fn locales(&self) -> Box<dyn Iterator<Item = &LanguageIdentifier> + '_>;
@@ -88,7 +88,7 @@ where
         lang: &LanguageIdentifier,
         text_id: &str,
         args: Option<&HashMap<Cow<'static, str>, FluentValue>>,
-    ) -> String {
+    ) -> Cow<'_, str> {
         L::lookup_complete(self, lang, text_id, args)
     }
 
@@ -97,7 +97,7 @@ where
         lang: &LanguageIdentifier,
         text_id: &str,
         args: Option<&HashMap<Cow<'static, str>, FluentValue>>,
-    ) -> Option<String> {
+    ) -> Option<Cow<'_, str>> {
         L::try_lookup_complete(self, lang, text_id, args)
     }
 
@@ -115,7 +115,7 @@ where
         lang: &LanguageIdentifier,
         text_id: &str,
         args: Option<&HashMap<Cow<'static, str>, FluentValue>>,
-    ) -> String {
+    ) -> Cow<'_, str> {
         L::lookup_complete(self, lang, text_id, args)
     }
 
@@ -124,7 +124,7 @@ where
         lang: &LanguageIdentifier,
         text_id: &str,
         args: Option<&HashMap<Cow<'static, str>, FluentValue>>,
-    ) -> Option<String> {
+    ) -> Option<Cow<'_, str>> {
         L::try_lookup_complete(self, lang, text_id, args)
     }
 
@@ -139,7 +139,7 @@ impl<T: Loader + ?Sized> Loader for Box<T> {
         lang: &LanguageIdentifier,
         text_id: &str,
         args: Option<&HashMap<Cow<'static, str>, FluentValue>>,
-    ) -> String {
+    ) -> Cow<'_, str> {
         self.as_ref().lookup_complete(lang, text_id, args)
     }
 
@@ -148,7 +148,7 @@ impl<T: Loader + ?Sized> Loader for Box<T> {
         lang: &LanguageIdentifier,
         text_id: &str,
         args: Option<&HashMap<Cow<'static, str>, FluentValue>>,
-    ) -> Option<String> {
+    ) -> Option<Cow<'_, str>> {
         self.as_ref().try_lookup_complete(lang, text_id, args)
     }
 

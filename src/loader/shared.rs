@@ -1,4 +1,4 @@
-use std::borrow::Borrow;
+use std::borrow::{Borrow, Cow};
 use std::collections::HashMap;
 
 use crate::{error::LookupError, FluentBundle};
@@ -6,12 +6,12 @@ use fluent_bundle::{FluentResource, FluentValue};
 
 pub use unic_langid::LanguageIdentifier;
 
-pub fn lookup_single_language<T: AsRef<str>, R: Borrow<FluentResource>>(
-    bundles: &HashMap<LanguageIdentifier, FluentBundle<R>>,
+pub fn lookup_single_language<'a, T: AsRef<str>, R: Borrow<FluentResource>>(
+    bundles: &'a HashMap<LanguageIdentifier, FluentBundle<R>>,
     lang: &LanguageIdentifier,
     text_id: &str,
     args: Option<&HashMap<T, FluentValue>>,
-) -> Result<String, LookupError> {
+) -> Result<Cow<'a, str>, LookupError> {
     let bundle = bundles
         .get(lang)
         .ok_or_else(|| LookupError::LangNotLoaded(lang.clone()))?;
@@ -42,19 +42,19 @@ pub fn lookup_single_language<T: AsRef<str>, R: Borrow<FluentResource>>(
     let value = bundle.format_pattern(pattern, args.as_ref(), &mut errors);
 
     if errors.is_empty() {
-        Ok(value.into())
+        Ok(value)
     } else {
         Err(LookupError::FluentError(errors))
     }
 }
 
-pub fn lookup_no_default_fallback<S: AsRef<str>, R: Borrow<FluentResource>>(
-    bundles: &HashMap<LanguageIdentifier, FluentBundle<R>>,
+pub fn lookup_no_default_fallback<'a, S: AsRef<str>, R: Borrow<FluentResource>>(
+    bundles: &'a HashMap<LanguageIdentifier, FluentBundle<R>>,
     fallbacks: &HashMap<LanguageIdentifier, Vec<LanguageIdentifier>>,
     lang: &LanguageIdentifier,
     text_id: &str,
     args: Option<&HashMap<S, FluentValue>>,
-) -> Option<String> {
+) -> Option<Cow<'a, str>> {
     let fallbacks = fallbacks.get(lang)?;
     for l in fallbacks {
         if let Ok(val) = lookup_single_language(bundles, l, text_id, args) {

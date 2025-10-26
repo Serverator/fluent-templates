@@ -64,6 +64,7 @@ impl<T> MultiLoader<T> {
         Self::default()
     }
 
+    #[allow(clippy::should_implement_trait)]
     /// Creates a [`MultiLoader`] from an iterator of loaders.
     pub fn from_iter(iter: impl IntoIterator<Item = T>) -> Self {
         Self {
@@ -101,13 +102,13 @@ impl<T: Loader> crate::Loader for MultiLoader<T> {
         lang: &unic_langid::LanguageIdentifier,
         text_id: &str,
         args: Option<&std::collections::HashMap<Cow<'static, str>, fluent_bundle::FluentValue>>,
-    ) -> String {
+    ) -> Cow<'_, str> {
         for loader in self.loaders.iter() {
             if let Some(text) = loader.try_lookup_complete(lang, text_id, args) {
                 return text;
             }
         }
-        format!("Unknown localization key: {text_id:?}")
+        Cow::Owned(format!("Unknown localization key: {text_id:?}"))
     }
 
     fn try_lookup_complete(
@@ -115,7 +116,7 @@ impl<T: Loader> crate::Loader for MultiLoader<T> {
         lang: &LanguageIdentifier,
         text_id: &str,
         args: Option<&HashMap<Cow<'static, str>, FluentValue>>,
-    ) -> Option<String> {
+    ) -> Option<Cow<'_, str>> {
         for loader in self.loaders.iter() {
             if let Some(text) = loader.try_lookup_complete(lang, text_id, args) {
                 return Some(text);
